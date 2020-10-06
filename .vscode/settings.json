@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/e8f05540-7908-4c9b-80c1-3f858e66ae54/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/movie-trivia",
+    "appService.deploySubpath": "."
+}
