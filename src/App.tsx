@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import './App.css'
 
-type Option = {
-  option: undefined | string
-}
-
 function App() {
   const [questions, setQuestions] = useState<string[]>([])
   const [question, setQuestion] = useState<string>('')
   const [correct_answers, setCorrectAnswers] = useState<string[]>([])
-  const [options, setAllOptions] = useState<Option[]>([])
+  const [options, setAllOptions] = useState<string[]>([])
+  const [answerOptions, setOptions] = useState<string[]>([])
   const [selectedOption, setSelectedOption] = useState<string>('')
-  const [answerOptions, setOptions] = useState<[]>([])
   const [questionNo, setQuestionCount] = useState<number>(0)
   const [score, setScore] = useState<number>(0)
+  const [isLoading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
+    setLoading(true)
     fetch(
       'https://opentdb.com/api.php?amount=10&category=11&difficulty=medium&type=multiple'
     )
@@ -23,43 +21,44 @@ function App() {
         return data.json()
       })
       .then((res) => {
-        console.log(res.results)
         const loaded_questions = res.results.map((data: any) => data.question)
         setQuestions(loaded_questions)
-        setQuestion(loaded_questions[questionNo])
+        setQuestion(loaded_questions[0])
 
         const loaded_correctAnswers = res.results.map(
           (data: any) => data.correct_answer
         )
         setCorrectAnswers(loaded_correctAnswers)
 
-        const options = res.results.map((data: any) => {
+        const loaded_options = res.results.map((data: any) => {
           return [...data.incorrect_answers, data.correct_answer]
         })
-        setAllOptions(options)
-        setOptions(options[questionNo])
+
+        setAllOptions(loaded_options)
+        setOptions(loaded_options[0])
+        setLoading(false)
       })
-  }, [questionNo])
+  }, [])
+
+  useEffect(() => {
+    const loadedOptions: any = options[questionNo]
+    setOptions(loadedOptions)
+    setQuestion(questions[questionNo])
+    setSelectedOption('')
+  }, [questionNo, options, questions])
 
   const handleSubmit = () => {
     const correct_answer = correct_answers[questionNo]
-
     if (questionNo < questions.length - 1) {
-      if (selectedOption) {
-        if (selectedOption === correct_answer) {
-          setScore((score) => score + 1)
-        }
-
-        setQuestionCount((count) => count + 1)
-
-        const loadedOptions: any = options[questionNo]
-        setOptions(loadedOptions)
-        setQuestion(questions[questionNo])
-      } else {
-        alert('select any option')
+      if (!selectedOption) return alert('choose any option')
+      if (selectedOption === correct_answer) {
+        setScore(score + 1)
       }
+
+      setQuestionCount(questionNo + 1)
     } else {
       alert(`Score: ${score}/${questions.length}`)
+      window.location.reload()
     }
   }
 
@@ -67,7 +66,7 @@ function App() {
     setSelectedOption(e.currentTarget.value)
   }
 
-  if (options.length === 0) {
+  if (isLoading) {
     return <div>Loading...</div>
   }
 
@@ -76,7 +75,7 @@ function App() {
       <h1 className='header-title'>Movie Trivia</h1>
       <h4 className='trivia-qn'> {question && question}</h4>
 
-      {answerOptions.map((option: Option, i: number) => (
+      {answerOptions.map((option: string, i: number) => (
         <div className='option' key={i}>
           <input
             type='radio'
